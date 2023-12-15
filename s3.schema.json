@@ -1,0 +1,352 @@
+{
+   "$schema":"http://json-schema.org/draft-04/schema#",
+   "type":"object",
+   "description":"Schema for S3",
+   "allOf":[
+      {
+         "$schema":"http://json-schema.org/draft-04/schema#",
+         "type":"object",
+         "allOf":[
+            {
+               "type":"object",
+               "properties":{
+                  "kind":{
+                     "type":"string",
+                     "description":"Describes the type of resource. e.g. ingress, application, mysql etc. If not specified, fallback is the `folder_name`/instances"
+                  },
+                  "flavor":{
+                     "type":"string",
+                     "description":"Implementation selector for the resource. e.g. for a resource type ingress, default, aws_alb, gcp_alb etc."
+                  },
+                  "version":{
+                     "type":"string",
+                     "description":"This field can be used to pin to a particular version"
+                  },
+                  "lifecycle":{
+                     "type":"string",
+                     "description":"This field describes the phase in which the resource has to be invoked (`ENVIRONMENT_BOOTSTRAP`)",
+                     "enum":[
+                        "ENVIRONMENT_BOOTSTRAP",
+                        "ENVIRONMENT"
+                     ]
+                  },
+                  "disabled":{
+                     "type":"boolean",
+                     "description":"Flag to disable the resource"
+                  },
+                  "conditional_on_intent":{
+                     "type":"string",
+                     "description":"Flag to enable the resource based on intent availability. eg mysql if mysql dashboard is required to be deployed. Note: Need to have the instance running beforehand to avail."
+                  },
+                  "provided":{
+                     "type":"boolean",
+                     "description":"Flag to tell if the resource should not be provisioned by facets",
+                     "default":false
+                  },
+                  "depends_on":{
+                     "type":"array",
+                     "items":{
+                        
+                     },
+                     "description":"Dependencies on other resources. e.g. application x may depend on mysql"
+                  },
+                  "metadata":{
+                     "type":"object",
+                     "description":"Metadata related to the resource",
+                     "properties":{
+                        "name":{
+                           "type":"string",
+                           "description":"Name of the resource\n    - if not specified, fallback is the `filename`"
+                        }
+                     },
+                     "required":[
+                        
+                     ]
+                  },
+                  "spec":{
+                     "type":"object",
+                     "description":"Specification as per resource types schema"
+                  },
+                  "out":{
+                     "type":"object",
+                     "description":"Output given by the resource for others to refer."
+                  },
+                  "advanced":{
+                     "type":"object",
+                     "description":"Additional fields if any for a particular implementation of a resource"
+                  }
+               }
+            },
+            {
+               "if":{
+                  "properties":{
+                     "provided":{
+                        "const":true
+                     }
+                  }
+               },
+               "then":{
+                  "required":[
+                     "kind",
+                     "flavor",
+                     "version",
+                     "metadata"
+                  ]
+               }
+            },
+            {
+               "if":{
+                  "properties":{
+                     "provided":{
+                        "const":false
+                     }
+                  }
+               },
+               "then":{
+                  "required":[
+                     "kind",
+                     "flavor",
+                     "version",
+                     "metadata",
+                     "spec"
+                  ]
+               }
+            }
+         ]
+      },
+      {
+         "type":"object",
+         "properties":{
+            "kind":{
+               "type":"string",
+               "enum":[
+                  "s3"
+               ]
+            },
+            "flavor":{
+               "type":"string",
+               "enum":[
+                  "default"
+               ]
+            },
+            "version":{
+               "type":"string",
+               "enum":[
+                  "0.1",
+                  "0.2",
+                  "latest"
+               ]
+            }
+         }
+      },
+      {
+         "type":"object",
+         "properties":{
+            "out":{
+               "type":"object",
+               "additionalProperties":false,
+               "description":"Output from the RabbitMQ module",
+               "allOf":[
+                  {
+                     "type":"object",
+                     "properties":{
+                        "spec":{
+                           "type":"object",
+                           "additionalProperties":false,
+                           "required":[
+                              
+                           ]
+                        }
+                     }
+                  },
+                  {
+                     "properties":{
+                        "bucket_name":{
+                           "type":"string",
+                           "description":"Name of the s3 bucket"
+                        },
+                        "bucket_arn":{
+                           "type":"string",
+                           "description":"ARN of the bucket"
+                        },
+                        "bucket_region":{
+                           "type":"string",
+                           "description":"Region of the Bucket"
+                        },
+                        "iam_policies":{
+                           "type":"object",
+                           "description":"IAM read_only and read_write policies for the bucket",
+                           "properties":{
+                              "READ_ONLY":{
+                                 "type":"string",
+                                 "description":"ARN of the read_only policy of the bucket"
+                              },
+                              "READ_WRITE":{
+                                 "type":"string",
+                                 "description":"ARN of the read_write policy of the bucket"
+                              }
+                           }
+                        }
+                     },
+                     "required":[
+                        
+                     ]
+                  }
+               ]
+            }
+         }
+      },
+      {
+         "type":"object",
+         "properties":{
+            "advanced":{
+               "type":"object",
+               "description":"Advanced values for s3",
+               "anyOf":[
+                  {
+                     "$schema":"http://json-schema.org/draft-04/schema#",
+                     "type":"object",
+                     "description":"Advanced Values for S3",
+                     "properties":{
+                        "s3":{
+                           "type":"object",
+                           "properties":{
+                              "aws_s3_bucket_policy":{
+                                 "type":"object",
+                                 "properties":{
+                                    "policy":{
+                                       "type":"object",
+                                       "description":"Policy definition of the bucket.",
+                                       "properties":{
+                                          "Statement":{
+                                             "type":"array",
+                                             "description":"Statement of the s3 bucket",
+                                             "items":{
+                                                "type":"object",
+                                                "properties":{
+                                                   "Principal":{
+                                                      "type":"array",
+                                                      "description":"List of the arn"
+                                                   },
+                                                   "Action":{
+                                                      "type":"string",
+                                                      "description":"Action of the s3 bucket statement"
+                                                   },
+                                                   "Effect":{
+                                                      "type":"string",
+                                                      "description":"Effect of the s3 bucket statement"
+                                                   }
+                                                }
+                                             }
+                                          }
+                                       }
+                                    }
+                                 }
+                              }
+                           },
+                           "description":"Advance values of s3 as per the resource documentation https://registry.terraform.io/providers/hashicorp/aws/3.74.0/docs/resources/s3_bucket along with \"aws_s3_bucket_policy\" object for custom bucket policy"
+                        }
+                     }
+                  }
+               ]
+            }
+         }
+      }
+   ],
+   "required":[
+      "kind",
+      "flavor",
+      "version",
+      "metadata"
+   ],
+   "if":{
+      "properties":{
+         "provided":{
+            "const":true
+         }
+      }
+   },
+   "then":{
+      "required":[
+         "out"
+      ]
+   },
+   "else":{
+      "not":{
+         "required":[
+            "out"
+         ]
+      }
+   },
+   "$defs":{
+      "specDef":{
+         "type":"object",
+         "properties":{
+            "spec":{
+               "type":"object",
+               "additionalProperties":false,
+               "required":[
+                  
+               ]
+            }
+         }
+      },
+      "outDef":{
+         "type":"object",
+         "properties":{
+            "out":{
+               "type":"object",
+               "additionalProperties":false,
+               "description":"Output from the RabbitMQ module",
+               "allOf":[
+                  {
+                     "type":"object",
+                     "properties":{
+                        "spec":{
+                           "type":"object",
+                           "additionalProperties":false,
+                           "required":[
+                              
+                           ]
+                        }
+                     }
+                  },
+                  {
+                     "properties":{
+                        "bucket_name":{
+                           "type":"string",
+                           "description":"Name of the s3 bucket"
+                        },
+                        "bucket_arn":{
+                           "type":"string",
+                           "description":"ARN of the bucket"
+                        },
+                        "bucket_region":{
+                           "type":"string",
+                           "description":"Region of the Bucket"
+                        },
+                        "iam_policies":{
+                           "type":"object",
+                           "description":"IAM read_only and read_write policies for the bucket",
+                           "properties":{
+                              "READ_ONLY":{
+                                 "type":"string",
+                                 "description":"ARN of the read_only policy of the bucket"
+                              },
+                              "READ_WRITE":{
+                                 "type":"string",
+                                 "description":"ARN of the read_write policy of the bucket"
+                              }
+                           }
+                        }
+                     },
+                     "required":[
+                        
+                     ]
+                  }
+               ]
+            }
+         }
+      }
+   }
+}
